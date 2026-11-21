@@ -16,14 +16,15 @@ header { background: #174e41; color: white; }
 .bar { max-width: 540px; margin: auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 h1 { font-size: clamp(1.15rem, 5vw, 1.55rem); margin: 0; }
 main { max-width: 540px; margin: auto; padding: 16px; }
-.progress { min-height: 24px; margin: 0 0 10px; font-weight: bold; letter-spacing: .25em; }
+.progress { min-height: 24px; margin: 0 0 10px; font-weight: bold; }
 .item { background: #fffdf0; border: 3px solid #174e41; border-radius: 26px; box-shadow: 0 5px #174e41; padding: 12px; }
-.picture { font-size: clamp(4rem, 22vw, 6rem); line-height: 1.15; }
+.picture { width: clamp(4rem, 22vw, 6rem); aspect-ratio: 1; margin: auto; background: url('./goods.png') no-repeat; background-size: 800% 100%; }
 h2 { margin: 4px 0; font-size: 1.6rem; }
 .price { display: flex; justify-content: center; gap: 6px; align-items: center; font-weight: bold; margin: 8px 0 2px; }
 .coin-face { display: inline-grid; place-items: center; align-content: center; gap: 1px; inline-size: 100%; aspect-ratio: 1; border: 2px solid #78848a; border-radius: 50%; background: linear-gradient(145deg, #fafcfc, #bbc6cd); color: #26363d; box-shadow: inset 0 0 0 2px #ffffff70; line-height: 1; font-weight: bold; }
 .coin-face[data-value="5"] { position: relative; border-color: #96732c; background: radial-gradient(circle at center, transparent 15%, #96732c 16%, #e5c375 20%, #e5c375 60%, #cba24c 100%); color: #49350b; }
-.coin-face[data-value="5"] > span { position: absolute; top: 65%; }
+.coin-face[data-value="50"] { position: relative; background: radial-gradient(circle, transparent 14%, #78848a 15%, #e1e7eb 19%, #c3cdd3 70%); }
+.coin-face:is([data-value="5"], [data-value="50"]) > span { position: absolute; top: 65%; }
 .coin-face[data-value="10"] { border-color: #914e32; background: linear-gradient(145deg, #f4bc99, #c17b59); color: #43261c; }
 .coin-face[data-value="500"] { border-color: #96732c; background: radial-gradient(circle, #e2e6e7 54%, #c39e51 56%, #f5dd9b 75%); }
 .mini { inline-size: 32px; font-size: .75rem; }
@@ -33,10 +34,9 @@ button:focus-visible { outline: 3px solid #4c34a3; outline-offset: 3px; }
 .wallet { margin-top: 16px; }
 .tray { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; min-height: 46px; padding: 5px; background: #c6ead3; border-radius: 14px; }
 .controls { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 10px; }
-.coins { display: grid; grid-template-columns: repeat(5, minmax(0, 68px)); justify-content: center; gap: 4px; margin-top: 10px; }
+.coins { display: grid; grid-template-columns: repeat(6, minmax(0, 68px)); justify-content: center; gap: 3px; margin-top: 10px; }
 .coin { display: grid; place-items: center; min-height: 48px; padding: 1px; background: transparent; border-radius: 12px; }
 .coin .coin-face { max-width: var(--diameter); font-size: clamp(.8rem, 4vw, 1.15rem); }
-.coin-motif { font-size: .75em; }
 .action { background: #174e41; color: white; border-radius: 15px; padding: 13px 18px; min-height: 50px; }
 .undo { background: white; color: #174e41; border-color: #174e41; border-radius: 14px; min-height: 48px; padding: 4px 9px; }
 button:disabled { opacity: .48; cursor: default; }
@@ -45,7 +45,7 @@ button:disabled { opacity: .48; cursor: default; }
 </style>
 </head>
 <body>
-<header><div class="bar"><h1>🛒 こいんのおみせ</h1><button class="listen" id="listen" type="button">🔊 きく</button></div></header>
+<header><div class="bar"><h1>こいんのおみせ</h1><button class="listen" id="listen" type="button">きく</button></div></header>
 <main>
   <p class="progress" id="progress"></p>
   <section class="item" aria-labelledby="name">
@@ -66,19 +66,21 @@ button:disabled { opacity: .48; cursor: default; }
 </main>
 <script>
 const goods = [
-  { name: 'りんご', picture: '🍎', price: 1 },
-  { name: 'ぱん', picture: '🥐', price: 2 },
-  { name: 'いちご', picture: '🍓', price: 3 },
-  { name: 'みかん', picture: '🍊', price: 5 },
-  { name: 'ばなな', picture: '🍌', price: 10 },
-  { name: 'おにぎり', picture: '🍙', price: 100 },
-  { name: 'ぬいぐるみ', picture: '🧸', price: 500 }
+  { name: 'りんご', price: 1 },
+  { name: 'ぱん', price: 2 },
+  { name: 'いちご', price: 3 },
+  { name: 'みかん', price: 5 },
+  { name: 'ばなな', price: 10 },
+  { name: 'あめ', price: 50 },
+  { name: 'おにぎり', price: 100 },
+  { name: 'ぬいぐるみ', price: 500 }
 ];
 const denominations = [
-  { value: 1, diameter: 44, motif: '🌱' },
+  { value: 1, diameter: 44 },
   { value: 5, diameter: 49 },
-  { value: 10, diameter: 52, motif: '🏯' },
-  { value: 100, diameter: 50, motif: '🌸' },
+  { value: 10, diameter: 52 },
+  { value: 50, diameter: 46 },
+  { value: 100, diameter: 50 },
   { value: 500, diameter: 58 }
 ];
 const elements = Object.fromEntries(
@@ -103,12 +105,6 @@ function coinFace(coin, miniature = false) {
   token.className = miniature ? 'coin-face mini' : 'coin-face';
   token.dataset.value = coin.value;
   token.setAttribute('aria-hidden', 'true');
-  if (!miniature && coin.motif) {
-    const motif = document.createElement('span');
-    motif.className = 'coin-motif';
-    motif.textContent = coin.motif;
-    token.append(motif);
-  }
   const label = document.createElement('span');
   label.textContent = coin.value;
   token.append(label);
@@ -140,6 +136,10 @@ function priceCoins(price) {
   return exactCoin ? [exactCoin] : Array(price).fill(denominations[0]);
 }
 
+function showProgress(bought) {
+  elements.progress.textContent = goods.length + 'このうち ' + bought + 'こ かえたよ';
+}
+
 function showCoins() {
   elements.tray.replaceChildren(...coins.map(coin => coinFace(coin, true)), total() + 'えん');
   elements.tray.setAttribute('aria-label', 'いれた おかね ' + total() + 'えん');
@@ -152,9 +152,8 @@ function showRound() {
   const item = goods[round];
   phase = 'shopping';
   coins.length = 0;
-  elements.progress.textContent = '★'.repeat(round) + '☆'.repeat(goods.length - round);
-  elements.progress.setAttribute('aria-label', round + 'こ かえたよ');
-  elements.picture.textContent = item.picture;
+  showProgress(round);
+  elements.picture.style.backgroundPositionX = (100 * round / (goods.length - 1)) + '%';
   elements.name.textContent = item.name;
   elements.price.replaceChildren(...priceCoins(item.price).map(coin => coinFace(coin, true)), item.price + 'えん');
   elements.status.textContent = 'おなじ きんがくに なるように いれてね';
@@ -182,8 +181,7 @@ elements.pay.addEventListener('click', () => {
   } else {
     phase = 'bought';
     const finished = round === goods.length - 1;
-    elements.progress.textContent = '★'.repeat(round + 1) + '☆'.repeat(goods.length - round - 1);
-    elements.progress.setAttribute('aria-label', (round + 1) + 'こ かえたよ');
+    showProgress(round + 1);
     elements.status.textContent = finished ? 'ぜんぶ かえたよ！' : item.name + 'が かえたよ！';
     elements.wallet.hidden = true;
     elements.next.textContent = finished ? 'もういちど' : 'つぎの おかいもの';

@@ -26,11 +26,12 @@ h2 { margin: 4px 0; font-size: 1.6rem; }
 .coin-face[data-value="50"] { position: relative; background: radial-gradient(circle, transparent 14%, #78848a 15%, #e1e7eb 19%, #c3cdd3 70%); }
 .coin-face:is([data-value="5"], [data-value="50"]) > span {
   position: absolute;
-  bottom: 64%;
   left: 50%;
   transform: translateX(-50%);
   font-size: .9em;
 }
+.coin-face[data-value="5"] > span { top: 64%; }
+.coin-face[data-value="50"] > span { bottom: 64%; }
 .coin-face[data-value="10"] { border-color: #914e32; background: linear-gradient(145deg, #f4bc99, #c17b59); color: #43261c; }
 .coin-face[data-value="500"] { border-color: #96732c; background: linear-gradient(145deg, #f5dd9b, #c39e51); color: #49350b; }
 .mini { inline-size: 32px; font-size: .75rem; }
@@ -72,16 +73,8 @@ button:disabled { opacity: .48; cursor: default; }
   <button class="action" id="next" type="button" hidden></button>
 </main>
 <script>
-const goods = [
-  { name: 'りんご', price: 1 },
-  { name: 'ぱん', price: 2 },
-  { name: 'いちご', price: 3 },
-  { name: 'みかん', price: 5 },
-  { name: 'ばなな', price: 10 },
-  { name: 'あめ', price: 50 },
-  { name: 'おにぎり', price: 100 },
-  { name: 'ぬいぐるみ', price: 500 }
-];
+const goods = ['りんご', 'ぱん', 'いちご', 'みかん', 'ばなな', 'あめ', 'おにぎり', 'ぬいぐるみ'];
+const prices = [1, 2, 3, 5, 6, 10, 11, 15, 20, 50, 55, 100, 110, 150, 500];
 const denominations = [
   { value: 1, diameter: 44 },
   { value: 5, diameter: 49 },
@@ -94,9 +87,26 @@ const elements = Object.fromEntries(
   ['progress', 'name', 'picture', 'price', 'wallet', 'tray', 'undo', 'coins', 'pay', 'status', 'next', 'listen']
     .map(id => [id, document.getElementById(id)])
 );
+let questions = makeQuestions();
 let round = 0;
 const coins = [];
 let phase = 'shopping';
+
+function shuffle(items) {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function makeQuestions() {
+  const pictures = goods.map((_, index) => index);
+  return shuffle(prices.flatMap(price =>
+    shuffle(pictures).slice(0, 2).map(picture => ({ picture, price }))
+  ));
+}
 
 function speech(message) {
   if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
@@ -139,12 +149,18 @@ const coinButtons = denominations.map(coin => {
 });
 
 function priceCoins(price) {
-  const exactCoin = denominations.find(coin => coin.value === price);
-  return exactCoin ? [exactCoin] : Array(price).fill(denominations[0]);
+  const hint = [];
+  let remaining = price;
+  for (const coin of [...denominations].reverse()) {
+    const count = Math.floor(remaining / coin.value);
+    hint.push(...Array(count).fill(coin));
+    remaining %= coin.value;
+  }
+  return hint;
 }
 
 function showProgress(bought) {
-  elements.progress.textContent = goods.length + 'このうち ' + bought + 'こ かえたよ';
+  elements.progress.textContent = questions.length + 'このうち ' + bought + 'こ かえたよ';
 }
 
 function showCoins() {
@@ -152,16 +168,16 @@ function showCoins() {
   elements.tray.setAttribute('aria-label', 'いれた おかね ' + total() + 'えん');
   elements.undo.disabled = coins.length === 0;
   // Enough room to pay any price entirely in 1-yen coins.
-  coinButtons.forEach(button => { button.disabled = coins.length >= goods.at(-1).price; });
+  coinButtons.forEach(button => { button.disabled = coins.length >= Math.max(...prices); });
 }
 
 function showRound() {
-  const item = goods[round];
+  const item = questions[round];
   phase = 'shopping';
   coins.length = 0;
   showProgress(round);
-  elements.picture.style.backgroundPositionX = (100 * round / (goods.length - 1)) + '%';
-  elements.name.textContent = item.name;
+  elements.picture.style.backgroundPositionX = (100 * item.picture / (goods.length - 1)) + '%';
+  elements.name.textContent = goods[item.picture];
   elements.price.replaceChildren(...priceCoins(item.price).map(coin => coinFace(coin, true)), item.price + 'えん');
   elements.status.textContent = 'おなじ きんがくに なるように いれてね';
   elements.wallet.hidden = false;
@@ -170,8 +186,8 @@ function showRound() {
 }
 
 function promptForItem() {
-  const item = goods[round];
-  return item.name + 'は、' + item.price + '円です。おなじ金額になるように入れてね。';
+  const item = questions[round];
+  return goods[item.picture] + 'は、' + item.price + '円です。おなじ金額になるように入れてね。';
 }
 
 elements.listen.hidden = !('speechSynthesis' in window && 'SpeechSynthesisUtterance' in window);
@@ -182,14 +198,14 @@ elements.undo.addEventListener('click', () => {
   elements.status.textContent = total() + 'えん のこったよ';
 });
 elements.pay.addEventListener('click', () => {
-  const item = goods[round];
+  const item = questions[round];
   if (total() !== item.price) {
     elements.status.textContent = total() < item.price ? 'もうすこし いれてみよう' : 'もどす を おしてみよう';
   } else {
     phase = 'bought';
-    const finished = round === goods.length - 1;
+    const finished = round === questions.length - 1;
     showProgress(round + 1);
-    elements.status.textContent = finished ? 'ぜんぶ かえたよ！' : item.name + 'が かえたよ！';
+    elements.status.textContent = finished ? 'ぜんぶ かえたよ！' : goods[item.picture] + 'が かえたよ！';
     elements.wallet.hidden = true;
     elements.next.textContent = finished ? 'もういちど' : 'つぎの おかいもの';
     elements.next.hidden = false;
@@ -198,7 +214,8 @@ elements.pay.addEventListener('click', () => {
   speech(elements.status.textContent);
 });
 elements.next.addEventListener('click', () => {
-  round = (round + 1) % goods.length;
+  round = (round + 1) % questions.length;
+  if (round === 0) questions = makeQuestions();
   showRound();
   coinButtons[0].focus();
   speech(promptForItem());

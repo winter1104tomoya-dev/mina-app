@@ -21,14 +21,22 @@ main { max-width: 540px; margin: auto; padding: 16px; }
 .picture { font-size: clamp(4rem, 22vw, 6rem); line-height: 1.15; }
 h2 { margin: 4px 0; font-size: 1.6rem; }
 .price { display: flex; justify-content: center; gap: 6px; align-items: center; font-weight: bold; margin: 8px 0 2px; }
-.mini { display: inline-grid; place-items: center; width: 26px; height: 26px; border: 2px solid #9c5e13; background: #ffcc63; border-radius: 50%; }
+.coin-face { display: inline-grid; place-items: center; align-content: center; gap: 1px; inline-size: 100%; aspect-ratio: 1; border: 2px solid #78848a; border-radius: 50%; background: linear-gradient(145deg, #fafcfc, #bbc6cd); color: #26363d; box-shadow: inset 0 0 0 2px #ffffff70; line-height: 1; font-weight: bold; }
+.coin-face[data-value="5"] { position: relative; border-color: #96732c; background: radial-gradient(circle at center, transparent 15%, #96732c 16%, #e5c375 20%, #e5c375 60%, #cba24c 100%); color: #49350b; }
+.coin-face[data-value="5"] > span { position: absolute; top: 65%; }
+.coin-face[data-value="10"] { border-color: #914e32; background: linear-gradient(145deg, #f4bc99, #c17b59); color: #43261c; }
+.coin-face[data-value="500"] { border-color: #96732c; background: radial-gradient(circle, #e2e6e7 54%, #c39e51 56%, #f5dd9b 75%); }
+.mini { inline-size: 32px; font-size: .75rem; }
 button { font: inherit; font-weight: bold; border: 2px solid transparent; cursor: pointer; touch-action: manipulation; }
 button:focus-visible { outline: 3px solid #4c34a3; outline-offset: 3px; }
 .listen { border-color: #9fe0bf; background: #fff; color: #174e41; border-radius: 14px; min-height: 44px; padding: 4px 10px; }
 .wallet { margin-top: 16px; }
-.tray { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 46px; background: #c6ead3; border-radius: 14px; }
+.tray { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; min-height: 46px; padding: 5px; background: #c6ead3; border-radius: 14px; }
 .controls { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 10px; }
-.coin { border-color: #8a5314; background: #ffd375; color: #51310b; border-radius: 50%; width: 76px; height: 76px; font-size: 1.25rem; box-shadow: inset 0 0 0 5px #ffe29b, 0 4px #8a5314; }
+.coins { display: grid; grid-template-columns: repeat(5, minmax(0, 68px)); justify-content: center; gap: 4px; margin-top: 10px; }
+.coin { display: grid; place-items: center; min-height: 48px; padding: 1px; background: transparent; border-radius: 12px; }
+.coin .coin-face { max-width: var(--diameter); font-size: clamp(.8rem, 4vw, 1.15rem); }
+.coin-motif { font-size: .75em; }
 .action { background: #174e41; color: white; border-radius: 15px; padding: 13px 18px; min-height: 50px; }
 .undo { background: white; color: #174e41; border-color: #174e41; border-radius: 14px; min-height: 48px; padding: 4px 9px; }
 button:disabled { opacity: .48; cursor: default; }
@@ -47,9 +55,9 @@ button:disabled { opacity: .48; cursor: default; }
   </section>
   <section class="wallet" id="wallet" aria-label="おしはらい">
     <div class="tray" id="tray" role="group"></div>
+    <div class="coins" id="coins" role="group" aria-label="えらべる こうか"></div>
     <div class="controls">
       <button class="undo" id="undo" type="button">もどす</button>
-      <button class="coin" id="coin" type="button" aria-label="1えんを いれる">1えん</button>
       <button class="action" id="pay" type="button">はらう</button>
     </div>
   </section>
@@ -60,14 +68,25 @@ button:disabled { opacity: .48; cursor: default; }
 const goods = [
   { name: 'りんご', picture: '🍎', price: 1 },
   { name: 'ぱん', picture: '🥐', price: 2 },
-  { name: 'いちご', picture: '🍓', price: 3 }
+  { name: 'いちご', picture: '🍓', price: 3 },
+  { name: 'みかん', picture: '🍊', price: 5 },
+  { name: 'ばなな', picture: '🍌', price: 10 },
+  { name: 'おにぎり', picture: '🍙', price: 100 },
+  { name: 'ぬいぐるみ', picture: '🧸', price: 500 }
+];
+const denominations = [
+  { value: 1, diameter: 44, motif: '🌱' },
+  { value: 5, diameter: 49 },
+  { value: 10, diameter: 52, motif: '🏯' },
+  { value: 100, diameter: 50, motif: '🌸' },
+  { value: 500, diameter: 58 }
 ];
 const elements = Object.fromEntries(
-  ['progress', 'name', 'picture', 'price', 'wallet', 'tray', 'undo', 'coin', 'pay', 'status', 'next', 'listen']
+  ['progress', 'name', 'picture', 'price', 'wallet', 'tray', 'undo', 'coins', 'pay', 'status', 'next', 'listen']
     .map(id => [id, document.getElementById(id)])
 );
 let round = 0;
-let coins = 0;
+const coins = [];
 let phase = 'shopping';
 
 function speech(message) {
@@ -79,60 +98,87 @@ function speech(message) {
   window.speechSynthesis.speak(utterance);
 }
 
-function coinPictures(container, amount) {
-  container.replaceChildren();
-  for (let i = 0; i < amount; i++) {
-    const token = document.createElement('span');
-    token.className = 'mini';
-    token.setAttribute('aria-hidden', 'true');
-    token.textContent = '1';
-    container.append(token);
+function coinFace(coin, miniature = false) {
+  const token = document.createElement('span');
+  token.className = miniature ? 'coin-face mini' : 'coin-face';
+  token.dataset.value = coin.value;
+  token.setAttribute('aria-hidden', 'true');
+  if (!miniature && coin.motif) {
+    const motif = document.createElement('span');
+    motif.className = 'coin-motif';
+    motif.textContent = coin.motif;
+    token.append(motif);
   }
+  const label = document.createElement('span');
+  label.textContent = coin.value;
+  token.append(label);
+  return token;
+}
+
+function total() {
+  return coins.reduce((sum, coin) => sum + coin.value, 0);
+}
+
+const coinButtons = denominations.map(coin => {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'coin';
+  button.style.setProperty('--diameter', coin.diameter + 'px');
+  button.setAttribute('aria-label', coin.value + 'えんを いれる');
+  button.append(coinFace(coin));
+  button.addEventListener('click', () => {
+    coins.push(coin);
+    showCoins();
+    elements.status.textContent = total() + 'えん はいったよ';
+  });
+  elements.coins.append(button);
+  return button;
+});
+
+function priceCoins(price) {
+  const exactCoin = denominations.find(coin => coin.value === price);
+  return exactCoin ? [exactCoin] : Array(price).fill(denominations[0]);
 }
 
 function showCoins() {
-  coinPictures(elements.tray, coins);
-  elements.tray.setAttribute('aria-label', 'いれた おかね ' + coins + 'えん');
-  elements.tray.append(coins + 'えん');
-  elements.undo.disabled = coins === 0;
-  elements.coin.disabled = coins === 5;
+  elements.tray.replaceChildren(...coins.map(coin => coinFace(coin, true)), total() + 'えん');
+  elements.tray.setAttribute('aria-label', 'いれた おかね ' + total() + 'えん');
+  elements.undo.disabled = coins.length === 0;
+  // Enough room to pay any price entirely in 1-yen coins.
+  coinButtons.forEach(button => { button.disabled = coins.length >= goods.at(-1).price; });
 }
 
 function showRound() {
   const item = goods[round];
   phase = 'shopping';
-  coins = 0;
+  coins.length = 0;
   elements.progress.textContent = '★'.repeat(round) + '☆'.repeat(goods.length - round);
   elements.progress.setAttribute('aria-label', round + 'こ かえたよ');
   elements.picture.textContent = item.picture;
   elements.name.textContent = item.name;
-  coinPictures(elements.price, item.price);
-  elements.price.append(item.price + 'えん');
-  elements.status.textContent = '1えんを いれてね';
+  elements.price.replaceChildren(...priceCoins(item.price).map(coin => coinFace(coin, true)), item.price + 'えん');
+  elements.status.textContent = 'おなじ きんがくに なるように いれてね';
   elements.wallet.hidden = false;
   elements.next.hidden = true;
   showCoins();
 }
 
-function changeCoins(delta) {
-  coins += delta;
-  showCoins();
-  elements.status.textContent = coins + 'えん はいったよ';
-}
-
 function promptForItem() {
   const item = goods[round];
-  return item.name + 'は、' + item.price + '円です。1円をいれてね。';
+  return item.name + 'は、' + item.price + '円です。おなじ金額になるように入れてね。';
 }
 
 elements.listen.hidden = !('speechSynthesis' in window && 'SpeechSynthesisUtterance' in window);
 elements.listen.addEventListener('click', () => speech(phase === 'shopping' ? promptForItem() : elements.status.textContent));
-elements.coin.addEventListener('click', () => changeCoins(1));
-elements.undo.addEventListener('click', () => changeCoins(-1));
+elements.undo.addEventListener('click', () => {
+  coins.pop();
+  showCoins();
+  elements.status.textContent = total() + 'えん のこったよ';
+});
 elements.pay.addEventListener('click', () => {
   const item = goods[round];
-  if (coins !== item.price) {
-    elements.status.textContent = coins < item.price ? 'もうすこし いれてみよう' : 'もどす を おしてみよう';
+  if (total() !== item.price) {
+    elements.status.textContent = total() < item.price ? 'もうすこし いれてみよう' : 'もどす を おしてみよう';
   } else {
     phase = 'bought';
     const finished = round === goods.length - 1;
@@ -149,7 +195,7 @@ elements.pay.addEventListener('click', () => {
 elements.next.addEventListener('click', () => {
   round = (round + 1) % goods.length;
   showRound();
-  elements.coin.focus();
+  coinButtons[0].focus();
   speech(promptForItem());
 });
 showRound();

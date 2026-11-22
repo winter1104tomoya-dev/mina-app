@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="こいんのおみせとオランダ語 タッチずかんを開けるアプリ一覧です。">
+  <title>アプリ一覧</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f0f7ff;
+      color: #17304b;
+      font: 1rem/1.7 system-ui, sans-serif;
+    }
+    main { width: min(100% - 2rem, 56rem); margin: 0 auto; padding: 3rem 0; }
+    h1 { margin: 0 0 1.5rem; font-size: clamp(2rem, 7vw, 3rem); line-height: 1.2; }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+      gap: 1rem;
+    }
+    li a {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: .75rem;
+      height: 100%;
+      padding: 1.5rem;
+      color: inherit;
+      background: white;
+      border: 1px solid #b9cde3;
+      border-top: .35rem solid #b45309;
+      border-radius: 1rem;
+      text-decoration: none;
+    }
+    li + li a { border-top-color: #087466; }
+    a:hover { border-color: #17304b; }
+    a:focus-visible { outline: .2rem solid #153ea3; outline-offset: .25rem; }
+    h2 { margin: 0; font-size: 1.4rem; line-height: 1.4; }
+    p { margin: 0; }
+    .open {
+      margin-top: auto;
+      padding: .35rem .85rem;
+      border-radius: .5rem;
+      background: #17304b;
+      color: white;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>アプリ一覧</h1>
+    <ul>
+      <li>
+        <a href="../" aria-labelledby="coin-title coin-open" aria-describedby="coin-description">
+          <h2 id="coin-title">こいんのおみせ</h2>
+          <p id="coin-description">硬貨をタップして、商品の値段と同じ金額をそろえるお買い物ごっこです。</p>
+          <span class="open" id="coin-open">アプリを開く</span>
+        </a>
+      </li>
+      <li>
+        <a href="../dutch/" aria-labelledby="dutch-title dutch-open" aria-describedby="dutch-description">
+          <h2 id="dutch-title">オランダ語 タッチずかん</h2>
+          <p id="dutch-description">絵をタッチして、オランダ語の単語やあいさつを聞けるずかんです。</p>
+          <span class="open" id="dutch-open">アプリを開く</span>
+        </a>
+      </li>
+    </ul>
+  </main>
+</body>
+</html>

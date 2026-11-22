@@ -11,6 +11,14 @@ const vocabulary = {
     ['🚗', 'くるま', 'auto'], ['🚌', 'バス', 'bus'], ['🚲', 'じてんしゃ', 'fiets'],
     ['🚆', 'でんしゃ', 'trein'], ['✈️', 'ひこうき', 'vliegtuig'], ['🚢', 'ふね', 'schip'],
   ],
+  greetings: [
+    ['🌅', 'おはよう', 'Goedemorgen'],
+    ['👋', 'こんにちは', 'Hallo'],
+    ['🌆', 'こんばんは', 'Goedenavond'],
+    ['🌙', 'おやすみ', 'Welterusten'],
+    ['💐', 'ありがとう', 'Dank je wel'],
+    ['🙋', 'またね', 'Tot ziens'],
+  ],
 };
 
 const cards = document.querySelector('#cards');
